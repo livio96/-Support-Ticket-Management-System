@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>CIDverse</title>
+      <script>
+
+function download_table_as_csv(table_id, separator = ',') {
+    // Select rows from table_id
+    var rows = document.querySelectorAll('table#' + table_id + ' tr');
+    // Construct csv
+    var csv = [];
+    for (var i = 0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll('td, th');
+        for (var j = 0; j < cols.length; j++) {
+            // Clean innertext to remove multiple spaces and jumpline (break csv)
+            var data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, '').replace(/(\s\s)/gm, ' ')
+            data = data.replace(/"/g, '""');
+            // Push escaped string
+            row.push('"' + data + '"');
+        }
+        csv.push(row.join(separator));
+    }
+    var csv_string = csv.join('\n');
+    // Download it
+    var filename = 'export_' + table_id + '_' + new Date().toLocaleDateString() + '.csv';
+    var link = document.createElement('a');
+    link.style.display = 'none';
+    link.setAttribute('target', '_blank');
+    link.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv_string));
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+         function buildTable(data){
+            var table = document.getElementById('myTable')
+            
+            for (var i = 0; i < data.length; i++){
+            var row = `<tr>
+            <td>${data[i].ID}</td>
+            </tr>`
+            table.innerHTML += row
+            
+            
+            }
+            }
+            
+            function clearData(){
+               $('#mytable tbody').empty();
+            }
+          
+            
+            async function getMessages() {
+            fetch( 'https://3n2306olsh.execute-api.us-west-2.amazonaws.com/dev',  {
+            method: 'GET'
+            })
+            .then(response => response.json())
+            .then((response) => {
+               
+            
+          
+            clearData();
+            var tr;
+            var link = $('<td><a href="UpdateCase.html">Update Case</a></td>');
+            let today = new Date();
+            var dd = String(today.getDate()).padStart(2, '0');
+            var mm = String(today.getMonth() + 1).padStart(2, '0'); 
+            var yyyy = today.getFullYear();
+            // today = mm + '-' + dd + '-' + yyyy;  
+            today = yyyy + '-' + mm + '-' + dd ;
+            
+            function DifferenceInDays(date1, date2) {
+              dt1 = new Date(date1);
+              dt2 = new Date(date2);
+              return Math.floor((Date.UTC(dt2.getFullYear(), dt2.getMonth(), dt2.getDate()) - Date.UTC(dt1.getFullYear(), dt1.getMonth(), dt1.getDate()) ) /(1000 * 60 * 60 * 24));
+              }
+            
+              var caseowner_filter = document.getElementById("CaseOwner").value;
+              var OnboardingType_filter = document.getElementById("OnboardingType").value;
+              var DealRequestType_filter = document.getElementById("DealRequestType").value;
+              var CaseStatus_filter = document.getElementById("CaseStatus").value;
+              var OnboardingStatus_filter = document.getElementById("OnboardingStatus").value;
+              var MIN = document.getElementById("DealEffectiveDate-from").value;
+              var MAX = document.getElementById("DealEffectiveDate-to").value;
+
+
+         
+              //Customize table view
+              var CompanyName_checkbox = document.getElementById("CompanyName-checkbox").checked;
+              var CompanyID_checkbox = document.getElementById("CompanyID-checkbox").checked;
+              var CaseOwner_checkbox = document.getElementById("CaseOwner-checkbox").checked;
+              var DealEffectiveDate_checkbox = document.getElementById("DealEffectiveDate-checkbox").checked;
+              var OnboardingType_checkbox = document.getElementById("OnboardingType-checkbox").checked;
+              var DealRequestType_checkbox = document.getElementById("DealRequestType-checkbox").checked;
+              var CaseStatus_checkbox = document.getElementById("CaseStatus-checkbox").checked;
+              var OnboardingStatus_checkbox = document.getElementById("OnboardingStatus-checkbox").checked;
+              var DaysInQueue_checkbox = document.getElementById("DifferenceInDays-checkbox").checked;
+         
+            
+            for (var i = 0; i < response.body.length; i++) {
+                tr = $('<tr/>');
+               //var link = $('<td><a id="caselink" href="UpdateCase.html">'+ response.body[i].ID +'</a></td>');
+                  var button = document.createElement('a');
+                   button.innerHTML = response.body[i].ID;
+                   button.className = "updateCaseClass";
+                   let r = Math.random().toString(36).substring(7);
+                   button.id = r;
+                   button.onclick = function(){
+                     var case_id_text = document.getElementById(r).innerHTML;
+                     localStorage.setItem("StorageItem",case_id_text);
+                     //document.location.href='UpdateCase.html'
+                     window.open(
+                     'updatecase.html',
+                     '_blank' 
+            );
+                      
+            };
+            
+            
+                if((response.body[i].CaseOwner == caseowner_filter || caseowner_filter == '' ) 
+                && (response.body[i].OnboardingType == OnboardingType_filter || OnboardingType_filter == '')
+                && (response.body[i].DealRequestType == DealRequestType_filter || DealRequestType_filter == '')
+                && (response.body[i].CaseStatus == CaseStatus_filter || CaseStatus_filter == '') 
+                && (response.body[i].OnboardingStatus == OnboardingStatus_filter || OnboardingStatus_filter == '')
+                && ( ( MIN <= response.body[i].DealEffectiveDate && response.body[i].DealEffectiveDate <= MAX) ||
+                     ( MIN == "" && MAX == "") ||
+                     ( MIN <= response.body[i].DealEffectiveDate && MAX == "") ||
+                     ( response.body[i].DealEffectiveDate <= MAX && MIN == ""))                                                   ){
+            
+                  tr.append(button);
+            if(CompanyID_checkbox == false)
+               document.getElementById("CompanyID-header").style.display = 'none';
+            else {
+               document.getElementById("CompanyID-header").style.display != 'none';
+               tr.append("<td>" + response.body[i].CompanyID + "</td>");
+            }
+            if(CompanyName_checkbox == false)
+               document.getElementById("CompanyName-header").style.display = 'none';
+            else {
+               document.getElementById("CompanyName-header").style.visibility = 'visible';
+               tr.append("<td>" + response.body[i].CompanyName + "</td>");
+            }
+            if(CaseOwner_checkbox == false)
+               document.getElementById("CaseOwner-header").style.display = 'none';
+            else
+               tr.append("<td>" + response.body[i].CaseOwner + "</td>");
+            
+            if(DealEffectiveDate_checkbox == false)
+               document.getElementById("DealEffectiveDate-header").style.display = 'none';
+            else
+               tr.append("<td>" + response.body[i].DealEffectiveDate + "</td>");
+            
+            if(OnboardingType_checkbox == false)
+               document.getElementById("OnboardingType-header").style.display = 'none';
+            else
+               tr.append("<td>" + response.body[i].OnboardingType + "</td>");
+            
+             if(DealRequestType_checkbox == false)
+               document.getElementById("DealRequestType-header").style.display = 'none';
+            else
+               tr.append("<td>" + response.body[i].DealRequestType + "</td>");
+            
+            if(CaseStatus_checkbox == false)
+               document.getElementById("CaseStatus-header").style.display = 'none';
+            else
+               tr.append("<td>" + response.body[i].CaseStatus + "</td>");
+            
+            if(OnboardingStatus_checkbox == false)
+               document.getElementById("OnboardingStatus-header").style.display = 'none';
+            else
+               tr.append("<td>" + response.body[i].OnboardingStatus + "</td>");
+            
+            if(DaysInQueue_checkbox == false)
+               document.getElementById("DaysInQueue-header").style.display = 'none';
+            else
+               tr.append("<td>" + DifferenceInDays(response.body[i].SignatureDate,today) + "</td>");            
+            
+            
+            $('table').append(tr);
+                }
+            }
+            
+            });
+            
+            
+            }
+         
+           
+      </script>
+      <!-- Google Font: Source Sans Pro -->
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+      <!-- Font Awesome -->
+      <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
+      <!-- DataTables -->
+      <link rel="stylesheet" href="plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+      <link rel="stylesheet" href="plugins/datatables-bs4/css/CustomStyle.css">
+      <link rel="stylesheet" href="plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+      <link rel="stylesheet" href="plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+      <!-- Theme style -->
+      <link rel="stylesheet" href="dist/css/adminlte.min.css">
+   </head>
+   <body class="hold-transition sidebar-mini">
+      <div class="wrapper">
+         <!-- Navbar -->
+         <!-- Navbar -->
+         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+               <li class="nav-item">
+                  <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+               </li>
+            </ul>
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+               <!-- Navbar Search -->
+               <li class="nav-item">
+                  <a class="nav-link" data-widget="fullscreen" href="#" role="button">
+                  <i class="fas fa-expand-arrows-alt"></i>
+                  </a>
+               </li>
+               <li class="nav-item">
+                  <a class="nav-link" data-widget="control-sidebar" data-slide="true" href="#" role="button">
+                  <i class="fas fa-th-large"></i>
+                  </a>
+               </li>
+            </ul>
+         </nav>
+         <!-- /.navbar -->
+         <!-- Main Sidebar Container -->
+         <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="index3.html" class="brand-link">
+            <img src="dist/img/AdminLTELogo.png" alt="AdminLTE Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+            <span class="brand-text font-weight-light">CDIverse</span>
+            </a>
+            <!-- Sidebar -->
+            <div class="sidebar">
+               <!-- Sidebar user panel (optional) -->
+               <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+                 
+                  <div class="info">
+                     <a href="#" class="d-block">Klesti Beqiri</a>
+                  </div>
+               </div>
+               <!-- SidebarSearch Form -->
+               <div class="form-inline">
+                  <div class="input-group" data-widget="sidebar-search">
+                     <input class="form-control form-control-sidebar" type="search" placeholder="Search" aria-label="Search">
+                     <div class="input-group-append">
+                        <button class="btn btn-sidebar">
+                        <i class="fas fa-search fa-fw"></i>
+                        </button>
+                     </div>
+                  </div>
+               </div>
+               <!-- Sidebar Menu -->
+               <nav class="mt-2">
+                  <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+                     <!-- Add icons to the links using the .nav-icon class
+                        with font-awesome or any other icon font library -->
+                     <li class="nav-item">
+                        <a href="index.html" class="nav-link">
+                           <i class="nav-icon fas fa-home"></i>
+                           <p>
+                              Home
+                           </p>
+                        </a>
+                     </li>
+                     <li class="nav-item">
+                        <a href="#" class="nav-link">
+                           <i class="nav-icon fas fa-edit"></i>
+                           <p>
+                              Case Management
+                              <i class="fas fa-angle-left right"></i>
+                           </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                           <li class="nav-item">
+                              <a href="createcase.html" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>Create A Case</p>
+                              </a>
+                           </li>
+                           <li class="nav-item">
+                              <a href="updatecase.html" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>Update A Case</p>
+                              </a>
+                           </li>
+                        </ul>
+                     </li>
+                     <li class="nav-item">
+                        <a href="#" class="nav-link">
+                           <i class="nav-icon fas fa-table"></i>
+                           <p>
+                              Queue Management
+                              <i class="fas fa-angle-left right"></i>
+                           </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                           <li class="nav-item">
+                              <a href="CaseQueue.html" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>Case Queue</p>
+                              </a>
+                           </li>
+                        </ul>
+                     </li>
+                     <li class="nav-header">Future Features</li>
+                     <li class="nav-item">
+                        <a href="#" class="nav-link">
+                           <i class="nav-icon fas fa-tachometer-alt"></i>
+                           <p>
+                              Analytics
+                              <i class="right fas fa-angle-left"></i>
+                           </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                           <li class="nav-item">
+                              <a href="/index.html" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>KPI v1</p>
+                              </a>
+                           </li>
+                           <li class="nav-item">
+                              <a href="#" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>KPI v2</p>
+                              </a>
+                           </li>
+                           <li class="nav-item">
+                              <a href="#" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>KPI v3</p>
+                              </a>
+                           </li>
+                        </ul>
+                     </li>
+                     <li class="nav-item">
+                        <a href="blank.html" class="nav-link">
+                           <i class="nav-icon far fa-envelope"></i>
+                           <p>
+                              Tasks
+                              <i class="fas fa-angle-left right"></i>
+                           </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                           <li class="nav-item">
+                              <a href="blank.html" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>My Tasks</p>
+                              </a>
+                           </li>
+                        </ul>
+                     </li>
+                     <li class="nav-item">
+                        <a href="#" class="nav-link">
+                           <i class="nav-icon fas fa-book"></i>
+                           <p>
+                              Profile
+                              <i class="fas fa-angle-left right"></i>
+                           </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                           <li class="nav-item">
+                              <a href="#" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p> My Profile</p>
+                              </a>
+                           </li>
+                        </ul>
+                     </li>
+                     <li class="nav-item">
+                        <a href="#" class="nav-link">
+                           <i class="nav-icon fas fa-upload"></i>
+                           <p>Bulk Case Import</p>
+                        </a>
+                     </li>
+                     <li class="nav-item">
+                        <a href="blank.html" class="nav-link">
+                           <i class="nav-icon far fa-plus-square"></i>
+                           <p>
+                              Audit
+                              <i class="fas fa-angle-left right"></i>
+                           </p>
+                        </a>
+                        <ul class="nav nav-treeview">
+                           <li class="nav-item">
+                              <a href="blank.html" class="nav-link">
+                                 <i class="far fa-circle nav-icon"></i>
+                                 <p>Blank Page</p>
+                              </a>
+                           </li>
+                        </ul>
+                     </li>
+                     <li class="nav-header">Resources</li>
+                     <li class="nav-item">
+                        <a href="blank.html" class="nav-link">
+                           <i class="nav-icon fas fa-file"></i>
+                           <p>Documentation</p>
+                        </a>
+                     </li>
+                     <li class="nav-item">
+                        <a href="blank.html" class="nav-link">
+                           <i class="nav-icon fas fa-file"></i>
+                           <p>Checkbox+</p>
+                        </a>
+                     </li>
+                     <li class="nav-item">
+                        <a href="blank.html" class="nav-link">
+                           <i class="nav-icon fas fa-file"></i>
+                           <p>Support</p>
+                        </a>
+                     </li>
+                     <li class="nav-item">
+                        <a href="blank.html" class="nav-link">
+                           <i class="nav-icon fas fa-file"></i>
+                           <p>Training</p>
+                        </a>
+                     </li>
+                  </ul>
+               </nav>
+               <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+         </aside>
+         <!-- Content Wrapper. Contains page content -->
+         <div class="content-wrapper">
+            <!-- Content Header (Page header) -->
+            <section class="content-header">
+               <div class="container-fluid">
+                  <div class="row mb-2">
+                     <div class="col-sm-6">
+                        <h1>Case Queue</h1>
+                     </div>
+                     <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                           <li class="breadcrumb-item"><a href="#">Home</a></li>
+                           <li class="breadcrumb-item active">DataTables</li>
+                        </ol>
+                     </div>
+                  </div>
+               </div>
+               <!-- /.container-fluid -->
+            </section>
+            <div class="card card-default">
+               <div class="card-header">
+                  <h3 class="card-title">Filter Selection</h3>
+                  <div class="card-tools">
+                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                     <i class="fas fa-minus"></i>
+                     </button>
+                     <button type="button" class="btn btn-tool" data-card-widget="remove">
+                     <i class="fas fa-times"></i>
+                     </button>
+                  </div>
+               </div>
+               <!-- Filter section starts here -->
+               <!-- /.card-header -->
+               <div class="card-body">
+                  <div class="row">
+                     <div class="col-md-4">
+                        <div class="form-group">
+                           <label>Case Owner</label>
+                           <input class="form-control" type="text" id="CaseOwner">
+                        </div>
+                        <div class="form-group">
+                           <label>Onboarding Type</label>
+                           <select class="form-control select2bs4" style="width: 100%;" id="OnboardingType">
+                              <option selected="selected"></option>
+                              <option>Service Specific</option>
+                              <option>Program</option>
+                              <option>Enterprise Support</option>
+                           </select>
+                        </div>
+                        <!-- /.form-group -->
+                        
+                        <!-- /.form-group -->
+                     </div>
+                     <!-- /.col -->
+                     <div class="col-md-4">
+                        <div class="form-group">
+                           <label>Case Status</label>
+                           <select class="form-control select2bs4" style="width: 100%;" id="CaseStatus">
+                              <option selected="selected"></option>
+                              <option>In Progress</option>
+                              <option>Completed</option>
+                           </select>
+                        </div>
+                        <!-- /.form-group -->
+                        <div class="form-group">
+                           <label>Onboarding Status</label>
+                           <select class="form-control select2bs4" style="width: 100%;" id="OnboardingStatus">
+                              <option selected="selected"></option>
+                              <option>In Progress</option>
+                              <option>Completed</option>
+                           </select>
+                        </div>
+                       
+                     </div>
+                     <!-- column 2-->
+                     <div class="col-md-4">
+                        <div class="form-group">
+                           <label>Deal Request Type</label>
+                           <select class="form-control select2bs4" style="width: 100%;" id="DealRequestType">
+                              <option selected="selected"></option>
+                              <option>New Agreement</option>
+                              <option>Renewal Agreement</option>
+                              <option>Contract Agreement</option>
+                              <option>Termination</option>
+                              <option>Other</option>
+                           </select>
+                        </div>
+                        <!-- /.form-group -->
+                        <div class="form-group">
+                           <label>Deal Effective Date</label><br>
+                           From <input  type="date" id="DealEffectiveDate-from"  placeholder="to" style="border: 1px solid #ced4da; width: 230px; height: 35px; "/> 
+                           To <input  type="date" id="DealEffectiveDate-to"  placeholder="to" style="border: 1px solid #ced4da; width: 200px; height: 35px; "/> 
+                        </div>
+                       
+                     </div>
+                     <!-- /.col -->
+                  </div>
+                  <!-- /.row -->
+               </div>
+               <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+            <!--Filter section ends here -->
+            <!-- Main content -->
+            <div class="card card-default">
+               <div class="card-header">
+                  <h3 class="card-title">Customize Table View</h3>
+                  <div class="card-tools">
+                     <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                     <i class="fas fa-minus"></i>
+                     </button>
+                     <button type="button" class="btn btn-tool" data-card-widget="remove">
+                     <i class="fas fa-times"></i>
+                     </button>
+                  </div>
+               </div>
+               <!-- Filter section starts here -->
+               <!-- /.card-header -->
+               <div class="card-body">
+                  <div class="row">
+                     <div class="col-md-3">
+                        <div class="icheck-primary d-inline">
+                           <input type="checkbox" id="CompanyName-checkbox" checked>
+                           <label for="checkboxPrimary1">Company Name</label>
+                        </div>
+                        <div>
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="CompanyID-checkbox" checked>
+                              <label for="checkboxPrimary1">Account ID</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                        <div class="form-group clearfix">
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="CaseOwner-checkbox" checked>
+                              <label for="checkboxPrimary1">Case Owner</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                     </div>
+                     <div class="col-md-3">
+                        <div class="icheck-primary d-inline">
+                           <input type="checkbox" id="DifferenceInDays-checkbox" checked>
+                           <label for="checkboxPrimary1">Days In Queue</label>
+                        </div>
+                        <div>
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="DealEffectiveDate-checkbox" checked>
+                              <label for="checkboxPrimary1">Deal Effective Date</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                        <div class="form-group clearfix">
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="OnboardingType-checkbox" checked>
+                              <label for="checkboxPrimary1">Onboarding Type</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                     </div>
+                     <!-- /.col -->
+                     <div class="col-md-3">
+                        <div class="icheck-primary d-inline">
+                           <input type="checkbox" id="DealRequestType-checkbox" checked>
+                           <label for="checkboxPrimary1">Deal Request Type</label>
+                        </div>
+                        <div>
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="CaseStatus-checkbox" checked>
+                              <label for="checkboxPrimary1">Case Status</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                        <div class="form-group clearfix">
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="OnboardingStatus-checkbox" checked>
+                              <label for="checkboxPrimary1">Onboarding Status</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                     </div>
+                     <div class="col-md-3">
+                        <div>
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="checkboxPrimary1" checked>
+                              <label for="checkboxPrimary1">Placeholder</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                        <div class="form-group clearfix">
+                           <div class="icheck-primary d-inline">
+                              <input type="checkbox" id="checkboxPrimary1" checked>
+                              <label for="checkboxPrimary1">Placeholder</label>
+                           </div>
+                        </div>
+                        <!-- /.form-group -->
+                     </div>
+                     <!-- /.col -->
+                  </div>
+                  <!-- /.row -->
+               </div>
+               <!-- /.card-body -->
+            </div>
+            <div style="margin-left:20px;">
+               <button type="submit" class="btn btn-primary" id="SubmitCase" value="Submit Case" onclick="getMessages()">Apply Filters</button>
+               <button type="submit" class="btn btn-primary" id="SubmitCase" value="Submit Case" onclick="download_table_as_csv('mytable')" style="background-color: green;">Download CSV</button>
+            </div>
+            <br>
+              
+     
+            <!-- <a href="#" onclick="download_table_as_csv('mytable');">Download as CSV</a> -->
+            <section class="content">
+               <div class="container-fluid">
+                  <div class="row">
+                     <div class="col-12">
+                        <div class="card">
+                           <!-- /.card-header -->
+                           <div class="card-body">
+                              <div class="card-body table-responsive p-0">
+                                 <table id="mytable" class="table table-hover text-nowrap">
+                                    <thead>
+                                       <th id="CaseID-header">Case ID </th>
+                                       <th id="CompanyID-header">Company ID</th>
+                                       <th id="CompanyName-header">Company Name</th>
+                                       <th id="CaseOwner-header">Case Owner</th>
+                                       <th id="DealEffectiveDate-header">Deal Effective Date</th>
+                                       <th id="OnboardingType-header">Onboarding Type</th>
+                                       <th id="DealRequestType-header">Deal Request Type</th>
+                                       <th id="CaseStatus-header">Case Status</th>
+                                       <th id="OnboardingStatus-header">Onboarding Status</th>
+                                       <th id="DaysInQueue-header">Days in Queue</th>
+                                    </thead>
+                                    <tbody>
+                                       <tr>
+                                       </tr>
+                                    </tbody>
+                                 </table>
+                              </div>
+                           </div>
+                           <!-- /.card-body -->
+                        </div>
+                        <!-- /.card -->
+                        </table>
+                     </div>
+                     <!-- /.card-body -->
+                  </div>
+                  <!-- /.card -->
+               </div>
+               <!-- /.col -->
+         </div>
+         <!-- /.row -->
+      </div>
+      <!-- /.container-fluid -->
+      </section>
+      <!-- /.content -->
+      </div>
+      <!-- /.content-wrapper -->
+      <!-- Control Sidebar -->
+      <aside class="control-sidebar control-sidebar-dark">
+         <!-- Control sidebar content goes here -->
+      </aside>
+      <!-- /.control-sidebar -->
+      </div>
+      <!-- ./wrapper -->
+      <!-- jQuery -->
+      <script src="plugins/jquery/jquery.min.js"></script>
+      <!-- Bootstrap 4 -->
+      <script src="plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+      <!-- DataTables  & Plugins -->
+      <script src="plugins/datatables/jquery.dataTables.min.js"></script>
+      <script src="plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+      <script src="plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+      <script src="plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+      <script src="plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+      <script src="plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+      <script src="plugins/jszip/jszip.min.js"></script>
+      <script src="plugins/pdfmake/pdfmake.min.js"></script>
+      <script src="plugins/pdfmake/vfs_fonts.js"></script>
+      <script src="plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+      <script src="plugins/datatables-buttons/js/buttons.print.min.js"></script>
+      <script src="plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+      <!-- AdminLTE App -->
+      <script src="dist/js/adminlte.min.js"></script>
+      <!-- AdminLTE for demo purposes -->
+      <script src="dist/js/demo.js"></script>
+      <!-- Page specific script -->
+      <script>
+         $(function () {
+           $("#example1").DataTable({
+             "responsive": true, "lengthChange": false, "autoWidth": false,
+             "buttons": ["copy", "csv", "excel", "pdf", "print", "colvis"]
+           }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+           $('#example2').DataTable({
+             "paging": true,
+             "lengthChange": false,
+             "searching": false,
+             "ordering": true,
+             "info": true,
+             "autoWidth": false,
+             "responsive": true,
+           });
+         });
+      </script>
+   </body>
+</html>
