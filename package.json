@@ -1,0 +1,22 @@
+{
+  "name": "my_package",
+  "version": "1.0.0",
+  "description": "Demo Link: https://env.d2yraayol1e5rd.amplifyapp.com/createcase.html",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/livio96/-Support-Ticket-Management-System.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/livio96/-Support-Ticket-Management-System/issues"
+  },
+  "homepage": "https://github.com/livio96/-Support-Ticket-Management-System#readme"
+}
